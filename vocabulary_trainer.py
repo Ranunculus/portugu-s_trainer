@@ -1,42 +1,24 @@
 from portugués_trainer import database_operations as database
-from portugués_trainer import vocabulary_creator as creator
+from fuzzywuzzy import fuzz as fuzzy_search
 
 
-def main_menu():
-    process_main_option(init_input())
+def process_input(how_many_words):
+    words_for_training = database.list_words_for_training(how_many_words)
+
+    if len(words_for_training) == 0:
+        print("You've already trained all of the words for today. Good job, rest for now)")
+    # todo SM2
+    for word in words_for_training:
+        print(word[3])
+        user_variant = input("Translate it:")
+        ratio = fuzzy_search.ratio(word[1], user_variant)
+        if ratio == 100:
+            print("Good job!")
+        if ratio < 100:
+            print(f"Correct is: {word[1]}")
+
+        database.save_training_result(word[0], ratio)
 
 
-def init_input():
-    print('What would you like to do: ')
-    print('Enter:')
-    print('1 to train (Press Enter for this option)')
-    print('2 to add new word')
-    print('3 list all words')
-
-    print('0 to exit')
-    return input('Choose: ')
-
-
-def process_main_option(option):
-    if option == '1' or option == '':
-        print('Under construction\n')
-        main_menu()
-        # how_many_words = input('How many words? (Enter for 10)')
-        # print(10 if (how_many_words == '' or type(how_many_words) != int) else how_many_words)
-        # todo train(10 if (how_many_words == '' or type(how_many_words) != int) else how_many_words)
-    elif option == '2':
-        creator.create_word_from_input()
-    elif option == '3':
-        for word in database.list_all():
-            print(word)
-        main_menu()
-    elif option == '0':
-        exit()
-    else:
-        print("Ha-ha, nice try")
-        process_main_option(init_input())
-
-
-if __name__ == "__main__":
-    database.init_database()
-    main_menu()
+def train(how_many_words):
+    process_input(how_many_words)

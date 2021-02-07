@@ -1,5 +1,5 @@
 from portugués_trainer import database_operations as database
-from portugués_trainer import vocabulary_trainer as trainer
+from portugués_trainer import main as main
 
 
 def is_word(what_to_do):
@@ -25,7 +25,7 @@ def process_input(word, transcription, translation):
         database.create_new_word(word, transcription, translation)
         what_to_do = input("Return to main menu, add new word or get the hell out of here? (r/W/g)")
         if is_return(what_to_do):
-            trainer.main_menu()
+            main.main_menu()
         elif is_word_or_default(what_to_do):
             create_word_from_input()
         else:
@@ -52,7 +52,7 @@ def process_input(word, transcription, translation):
         else:
             what_to_do = input("Return to main menu, try with this word again or get the hell out of here? (R/w/g)")
             if is_return_or_default(what_to_do):
-                trainer.main_menu()
+                main.main_menu()
             elif is_word(what_to_do):
                 process_input(word, transcription, translation)
             else:
