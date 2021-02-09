@@ -1,5 +1,7 @@
 import telebot
 from telebot import types
+from portugués_trainer import database_operations as database
+from fuzzywuzzy import fuzz as fuzzy_search
 
 
 def token():
@@ -8,6 +10,8 @@ def token():
 
 
 bot = telebot.TeleBot(token())
+
+answers = {}
 
 
 @bot.message_handler(commands=['start'])
@@ -23,9 +27,34 @@ def start_message(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     if call.data == "train":
-        bot.send_message(call.message.chat.id, 'Запомню : )')
+        train_next_word_prompt(call.message.chat)
     elif call.data == "new":
         bot.send_message(call.message.chat.id, 'В разработке')
+
+
+def train_next_word_prompt(chat):
+    words_to_train = database.next_word_for_training()
+    if len(words_to_train) == 0:
+        bot.send_message(chat.id, "Молодец! Пока все слова повторены")
+    else:
+        next_word_for_training = words_to_train[0]
+        answers[chat.username] = (next_word_for_training[0], next_word_for_training[1])
+        bot.send_message(chat.id, next_word_for_training[3])
+
+
+@bot.message_handler(content_types=['text'])
+def handle_word(message):
+    answer_tuple = answers[message.chat.username]
+    answer = answer_tuple[1]
+    ratio = fuzzy_search.ratio(answer, message.text)
+    if ratio == 100:
+        bot.send_message(message.chat.id, "Отлично!")
+    else:
+        # todo: hints?
+        bot.send_message(message.chat.id, f"Правильный ответ: {answer}")
+
+    database.save_training_result(answer_tuple[0], ratio)
+    train_next_word_prompt(message.chat)
 
 
 bot.polling()

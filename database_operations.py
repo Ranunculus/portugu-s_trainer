@@ -13,7 +13,7 @@ def init_database():
         (id INTEGER PRIMARY KEY, word TEXT, transcription TEXT, translation TEXT)''')
 
     cur.execute('''CREATE TABLE IF NOT EXISTS Trainings
-        (id INTEGER PRIMARY KEY, word_id INTEGER, successes INTEGER, failures INTEGER, next_training_date REAL,
+        (id INTEGER PRIMARY KEY, word_id INTEGER, successes INTEGER, failures INTEGER, next_training_date INTEGER,
         FOREIGN KEY(word_id) REFERENCES Words(id))''')
     cur.close()
     conn.close()
@@ -49,7 +49,7 @@ def list_words_for_training(words_amount):
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute(
-        f"SELECT word_id FROM Trainings WHERE next_training_date IS NULL OR next_training_date < DATETIME('now','localtime') LIMIT {words_amount}")
+        f"SELECT word_id FROM Trainings WHERE next_training_date IS NULL OR next_training_date < {datetime.datetime.now().timestamp()} LIMIT {words_amount}")
 
     word_ids = cursor.fetchall()
 
@@ -67,14 +67,21 @@ def list_words_for_training(words_amount):
     return rows
 
 
+def next_word_for_training():
+    return list_words_for_training(1)
+
+
 def save_training_result(word_id, ratio):
     connection = get_connection()
     cursor = connection.cursor()
     if ratio == 100:
-        cursor.execute('UPDATE Trainings SET successes = successes + 1, next_training_date = ? WHERE word_id = (?)', ((datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%B %d, %Y %I:%M%p"), word_id,))
+        cursor.execute('UPDATE Trainings SET successes = successes + 1, next_training_date = ? WHERE word_id = (?)', ((datetime.datetime.now() + datetime.timedelta(days=1)).timestamp(), word_id,))
+    elif ratio > 85:
+        cursor.execute('UPDATE Trainings SET failures = failures + 1, next_training_date = ? WHERE word_id = ?',
+                       ((datetime.datetime.now() + datetime.timedelta(minutes=5)).timestamp(), word_id))
     else:
         cursor.execute('UPDATE Trainings SET failures = failures + 1, next_training_date = ? WHERE word_id = ?',
-                       (datetime.now().strftime("%B %d, %Y %I:%M%p"), word_id))
+                       ((datetime.datetime.now() + datetime.timedelta(minutes=1)).timestamp(), word_id))
 
     connection.commit()
     cursor.close()
