@@ -72,7 +72,7 @@ def train_next_word_prompt(chat, user_id):
 def handle_word(message):
     message_split = message.text.split(",")
     if len(message_split) == 3:
-        database.create_new_word(message_split[0], message_split[1], message_split[2])
+        database.create_new_word(message.from_user.id, message_split[0], message_split[1], message_split[2])
         add_new_word_prompt(message.chat)
     else:
         current_session = database.get_session_for_user(message.from_user.id)
@@ -82,7 +82,7 @@ def handle_word(message):
             bot.send_message(message.chat.id, "Отлично!")
         else:
             # todo: hints?
-            bot.send_message(message.chat.id, f"Правильный ответ: {answer}")
+            bot.send_message(message.chat.id, f"Правильный ответ: {answer[1]}")
 
         database.save_training_result(message.from_user.id, answer[0], ratio)
         database.delete_session_for_user(message.from_user.id)

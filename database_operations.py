@@ -11,7 +11,7 @@ def init_database():
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS Words
-        (id INTEGER PRIMARY KEY, word TEXT, transcription TEXT, translation TEXT)''')
+        (id INTEGER PRIMARY KEY, word TEXT, transcription TEXT, translation TEXT, UNIQUE(word))''')
 
     cur.execute('''CREATE TABLE IF NOT EXISTS Users
         (id INTEGER PRIMARY KEY, 
@@ -173,4 +173,4 @@ def get_word(word_id):
 
 
 def delete_session_for_user(user_id):
-    write_data(f"DELETE FROM Session WHERE user_id = {user_id}", ())
+    write_data(f"DELETE FROM Sessions WHERE user_id = {user_id}", ())
