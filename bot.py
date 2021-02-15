@@ -13,15 +13,21 @@ bot = telebot.TeleBot(token())
 database.init_database()
 
 
+def delete_session_for_user(user_id):
+    database.delete_session_for_user(user_id)
+
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     keyboard = types.InlineKeyboardMarkup()
     user_id = message.from_user.id
+    delete_session_for_user(user_id)
     database.create_user_if_doesnt_exist(user_id, message.from_user.first_name)
     if database.has_words_to_train(user_id):
         bot_train_option(keyboard)
     else:
-        add_existing_prompt = types.InlineKeyboardButton(text='Скопировать текущую версию словаря для тренировок', callback_data='add_existing')
+        add_existing_prompt = types.InlineKeyboardButton(text='Скопировать текущую версию словаря для тренировок',
+                                                         callback_data='add_existing')
         keyboard.add(add_existing_prompt)
     bot_add_new_word(keyboard)
     bot.send_message(user_id, text=f"{message.from_user.first_name}, что будем делать?", reply_markup=keyboard)
@@ -85,7 +91,7 @@ def handle_word(message):
             bot.send_message(message.chat.id, f"Правильный ответ: {answer[1]}")
 
         database.save_training_result(message.from_user.id, answer[0], ratio)
-        database.delete_session_for_user(message.from_user.id)
+        delete_session_for_user(message.from_user.id)
         train_next_word_prompt(message.chat, message.from_user.id)
 
 

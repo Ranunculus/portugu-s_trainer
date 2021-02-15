@@ -11,7 +11,7 @@ def init_database():
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS Words
-        (id INTEGER PRIMARY KEY, word TEXT, transcription TEXT, translation TEXT, UNIQUE(word))''')
+        (id INTEGER PRIMARY KEY, word TEXT UNIQUE, transcription TEXT, translation TEXT)''')
 
     cur.execute('''CREATE TABLE IF NOT EXISTS Users
         (id INTEGER PRIMARY KEY, 
@@ -69,7 +69,7 @@ def list_words_for_training(user_id, words_amount):
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute(
-        f"SELECT word_id FROM Trainings WHERE (next_training_date IS NULL OR next_training_date < {datetime.datetime.now().timestamp()}) AND user_id = {user_id} LIMIT {words_amount}")
+        f"SELECT word_id FROM Trainings WHERE (next_training_date IS NULL OR next_training_date < {datetime.datetime.now().timestamp()}) AND user_id = {user_id} ORDER BY RANDOM() LIMIT {words_amount}")
 
     word_ids = cursor.fetchall()
 
