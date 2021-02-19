@@ -83,7 +83,7 @@ def handle_word(message):
     else:
         current_session = database.get_session_for_user(message.from_user.id)
         answer = database.get_word(current_session[2])
-        ratio = fuzzy_search.ratio(answer[1], message.text)
+        ratio = fuzzy_search.ratio(answer[1].lower(), message.text.lower())
         if ratio == 100:
             bot.send_message(message.chat.id, "Отлично!")
         else:
