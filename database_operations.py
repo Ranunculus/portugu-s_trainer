@@ -174,3 +174,12 @@ def get_word(word_id):
 
 def delete_session_for_user(user_id):
     write_data(f"DELETE FROM Sessions WHERE user_id = {user_id}", ())
+
+
+def get_users_for_training():
+    connection = get_connection()
+    cursor = connection.cursor()
+    users = cursor.execute(f"SELECT min(word_id), user_id FROM Trainings WHERE next_training_date IS NULL OR next_training_date < {datetime.datetime.now().timestamp()} GROUP BY user_id").fetchall()
+    connection.close()
+    return users
+    
