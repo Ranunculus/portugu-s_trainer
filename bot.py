@@ -17,7 +17,7 @@ def delete_session_for_user(user_id):
     database.delete_session_for_user(user_id)
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'restart'])
 def start_message(message):
     keyboard = types.InlineKeyboardMarkup()
     user_id = message.from_user.id
@@ -47,12 +47,13 @@ def add_existing_words_for_user_training(user_id):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
+    user_id = call.from_user.id
     if call.data == "train":
+        delete_session_for_user(user_id)
         train_next_word_prompt(call.message.chat, call.from_user.id)
     elif call.data == "new":
         add_new_word_prompt(call.message.chat)
     elif call.data == "add_existing":
-        user_id = call.from_user.id
         add_existing_words_for_user_training(user_id)
         keyboard = types.InlineKeyboardMarkup()
         bot_train_option(keyboard)
@@ -80,6 +81,8 @@ def handle_word(message):
     if len(message_split) == 3:
         database.create_new_word(message.from_user.id, message_split[0], message_split[1], message_split[2])
         add_new_word_prompt(message.chat)
+    elif len(message_split) == 2:
+        bot.send_message(message.chat.id, f"Неправильный формат сообщения")
     else:
         current_session = database.get_session_for_user(message.from_user.id)
         answer = database.get_word(current_session[2])
