@@ -90,8 +90,14 @@ def handle_word(message):
         if ratio == 100:
             bot.send_message(message.chat.id, "Отлично!")
         else:
-            # todo: hints?
-            bot.send_message(message.chat.id, f"Правильный ответ: {answer[1]}")
+            if answer[1].lower().endswith(message.text.lower()):
+                bot.send_message(message.chat.id, f"А артикль?")
+                return
+            elif ratio > 80:
+                bot.send_message(message.chat.id, f"Почти) Попробуй ещё раз")
+                return
+            else:
+                bot.send_message(message.chat.id, f"Правильный ответ: {answer[1]}")
 
         database.save_training_result(message.from_user.id, answer[0], ratio)
         delete_session_for_user(message.from_user.id)
