@@ -17,12 +17,17 @@ def delete_session_for_user(user_id):
     database.delete_session_for_user(user_id)
 
 
+def remove_session_word_for_user_and_increment_words_count(user_id):
+    database.remove_session_word_for_user(user_id)
+
+
 @bot.message_handler(commands=['start', 'restart'])
 def start_message(message):
     keyboard = types.InlineKeyboardMarkup()
     user_id = message.from_user.id
-    delete_session_for_user(user_id)
     database.create_user_if_doesnt_exist(user_id, message.from_user.first_name)
+    database.create_session_for_user_if_doesnt_exist(user_id)
+    database.create_settings_for_user_if_doesnt_exist(user_id)
     if database.has_words_to_train(user_id):
         bot_train_option(keyboard)
     else:
@@ -30,6 +35,7 @@ def start_message(message):
                                                          callback_data='add_existing')
         keyboard.add(add_existing_prompt)
     bot_add_new_word(keyboard)
+    bot_show_settings_prompt(keyboard)
     bot.send_message(user_id, text=f"{message.from_user.first_name}, что будем делать?", reply_markup=keyboard)
 
 
@@ -45,11 +51,16 @@ def add_existing_words_for_user_training(user_id):
     database.create_trainings_of_all_words_for_user(user_id)
 
 
+def bot_show_settings_prompt(keyboard):
+    keyboard.add(types.InlineKeyboardButton(text='Показать настройки', callback_data='show_settings'))
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
     user_id = call.from_user.id
     if call.data == "train":
-        delete_session_for_user(user_id)
+        # delete_session_for_user(user_id)
+        database.remove_words_count_for_user(user_id)
         train_next_word_prompt(call.message.chat, call.from_user.id)
     elif call.data == "new":
         add_new_word_prompt(call.message.chat)
@@ -59,6 +70,9 @@ def callback_worker(call):
         bot_train_option(keyboard)
         bot_add_new_word(keyboard)
         bot.send_message(user_id, text="Готово! Что дальше?", reply_markup=keyboard)
+    elif call.data == "show_settings":
+        settings = database.get_settings_for_user(user_id)
+        bot.send_message(user_id, text=f"Количество слов в одной учебной сессии {settings[2]}")
 
 
 def add_new_word_prompt(chat):
@@ -66,6 +80,9 @@ def add_new_word_prompt(chat):
 
 
 def train_next_word_prompt(chat, user_id):
+    if database.check_session(user_id):
+        bot.send_message(chat.id, "Молодец! Учебная сессия завершена")
+        return
     words_to_train = database.next_word_for_training(user_id)
     if len(words_to_train) == 0:
         bot.send_message(chat.id, "Молодец! Пока все слова повторены")
@@ -100,7 +117,7 @@ def handle_word(message):
                 bot.send_message(message.chat.id, f"Правильный ответ: {answer[1]}")
 
         database.save_training_result(message.from_user.id, answer[0], ratio)
-        delete_session_for_user(message.from_user.id)
+        remove_session_word_for_user_and_increment_words_count(message.from_user.id)
         train_next_word_prompt(message.chat, message.from_user.id)
 
 
