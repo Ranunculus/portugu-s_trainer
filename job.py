@@ -25,9 +25,18 @@ def prompt_users():
 bot = telebot.TeleBot(token())
 
 schedule.every().day.at("10:00").do(prompt_users)
-schedule.every().day.at("13:00").do(prompt_users)
+schedule.every().day.at("14:00").do(prompt_users)
+schedule.every().day.at("14:30").do(prompt_users)
+schedule.every().day.at("15:00").do(prompt_users)
+schedule.every().day.at("15:30").do(prompt_users)
 schedule.every().day.at("16:00").do(prompt_users)
+schedule.every().day.at("16:30").do(prompt_users)
+schedule.every().day.at("17:00").do(prompt_users)
+schedule.every().day.at("17:30").do(prompt_users)
 schedule.every().day.at("18:00").do(prompt_users)
+schedule.every().day.at("18:30").do(prompt_users)
+schedule.every().day.at("19:00").do(prompt_users)
+schedule.every().day.at("19:30").do(prompt_users)
 schedule.every().day.at("20:00").do(prompt_users)
 
 while 1:
