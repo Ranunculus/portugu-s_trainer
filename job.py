@@ -3,7 +3,7 @@ import telebot
 from telebot import types
 from telebot.apihelper import ApiTelegramException
 
-from portugués_trainer import database_operations as database
+from portugués_trainer.libs import database_operations as database
 
 
 def token():
