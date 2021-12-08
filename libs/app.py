@@ -26,12 +26,18 @@ def train_next_word_prompt(user_id):
     else:
         next_word_for_training = words_to_train[0]
         database.save_session_for_user(user_id, next_word_for_training[0])
-        return next_word_for_training[3]
+        return next_word_for_training
 
 
-def handle_user_response(message_split, user_id, text_lower):
+def find_picture(user_id, word_id):
+    return database.find_picture(user_id, word_id)
+
+
+def handle_user_response(message_split, user_id, text_lower, image_bytes):
     if len(message_split) == 3:
-        database.create_new_word(user_id, message_split[0], message_split[1], message_split[2])
+        word_id = database.create_new_word(user_id, message_split[0], message_split[1], message_split[2])
+        if image_bytes:
+            database.add_image_for_word_and_user(word_id, user_id, image_bytes)
     elif len(message_split) == 2:
         return HandlerResult(f"Неправильный формат сообщения")
     else:

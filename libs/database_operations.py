@@ -44,6 +44,14 @@ def init_database():
             FOREIGN KEY(user_id) REFERENCES Users(id),
             UNIQUE(user_id))''')
 
+    cur.execute('''CREATE TABLE IF NOT EXISTS Pictures
+        (id INTEGER PRIMARY KEY,
+        picture BLOB,
+        word_id INTEGER,
+        user_id INTEGER,
+        FOREIGN KEY(word_id) REFERENCES Words(id),
+        FOREIGN KEY(user_id) REFERENCES Users(id))''')
+
     cur.close()
     conn.close()
 
@@ -57,6 +65,21 @@ def create_new_word(user_id, word, transcription, translation):
     word_id = cursor.execute('SELECT id FROM Words WHERE word = (?)', (word,)).fetchall()
     cursor.execute('INSERT OR IGNORE INTO Trainings (user_id, word_id, successes, failures) VALUES ( ?, ?, ?, ? )',
                    (user_id, word_id[0][0], 0, 0))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return word_id[0][0]
+
+
+def add_image_for_word_and_user(word_id, user_id, image_bytes):
+    connection = get_connection()
+    cursor = connection.cursor()
+    print(image_bytes)
+    print(word_id)
+    print(user_id)
+    cursor.execute('INSERT OR IGNORE INTO Pictures (picture, word_id, user_id) VALUES ( ?, ?, ? )',
+                   (image_bytes, word_id, user_id))
+
     connection.commit()
     cursor.close()
     connection.close()
@@ -163,6 +186,22 @@ def create_trainings_of_all_words_for_user(user_id):
 
 def save_session_for_user(user_id, word_id):
     write_data(f'UPDATE Sessions SET word_id={word_id}, words_count = words_count + 1 WHERE user_id = {user_id}')
+
+
+def find_picture(user_id, word_id):
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute(f'SELECT * FROM Pictures WHERE user_id = {user_id} and word_id = {word_id}')
+
+    rows = cursor.fetchall()
+
+    picture = None
+    if len(rows) > 0:
+        picture = rows[0][1]
+
+    cursor.close()
+    connection.close()
+    return picture
 
 
 def write_data(query):
