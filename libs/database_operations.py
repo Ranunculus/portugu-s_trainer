@@ -185,6 +185,8 @@ def create_trainings_of_all_words_for_user(user_id):
 
 
 def save_session_for_user(user_id, word_id):
+    if word_id is None:
+        print("Trying to save empty word")
     write_data(f'UPDATE Sessions SET word_id={word_id}, words_count = words_count + 1 WHERE user_id = {user_id}')
 
 
@@ -237,6 +239,7 @@ def get_settings_for_user(user_id):
 def get_word(word_id):
     connection = get_connection()
     cursor = connection.cursor()
+    print(word_id)
     word = cursor.execute(f"SELECT * FROM Words WHERE id = {word_id}").fetchall()
     cursor.close()
     connection.close()

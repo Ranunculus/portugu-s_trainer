@@ -19,10 +19,10 @@ def add_existing_words_for_user_training(user_id):
 
 def train_next_word_prompt(user_id):
     if database.check_session(user_id):
-        return "Молодец! Учебная сессия завершена"
+        return ["", "", "", "Молодец! Учебная сессия завершена"]
     words_to_train = database.next_word_for_training(user_id)
     if len(words_to_train) == 0:
-        return "Молодец! Пока все слова повторены"
+        return ["", "", "", "Молодец! Пока все слова повторены"]
     else:
         next_word_for_training = words_to_train[0]
         database.save_session_for_user(user_id, next_word_for_training[0])
@@ -42,6 +42,8 @@ def handle_user_response(message_split, user_id, text_lower, image_bytes):
         return HandlerResult(f"Неправильный формат сообщения")
     else:
         current_session = database.get_session_for_user(user_id)
+        if current_session[2] is None:
+            return HandlerResult("Session is not valid, restart")
         answer = database.get_word(current_session[2])
         ratio = fuzzy_search.ratio(answer[1].lower(), text_lower)
         if ratio == 100:
